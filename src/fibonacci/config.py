@@ -1,5 +1,7 @@
+from typing import Literal
+
 class Config:
-    backend = "py"
+    backend: Literal["py", "rs"] = "py"
 
 
 config = Config()
