@@ -1,0 +1,67 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: no-commit-to-branch
+        args: [--branch, main]
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: check-docstring-first
+      - id: check-yaml
+      - id: check-toml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: local
+    hooks:
+      - id: format
+        name: ruff-format
+        entry: uv run ruff format src/fibonacci
+        language: system
+        pass_filenames: false
+        files: "^(srt/fibonacci/)"
+
+      - id: fix-lint
+        name: ruff-check
+        entry: uv run ruff check --fix src/fibonacci
+        language: system
+        pass_filenames: false
+        files: "^(src/fibonacci/)"
+
+      - id: typecheck
+        name: mypy
+        entry: uv run mypy src/fibonacci
+        language: system
+        pass_filenames: false
+        files: "^(src/fibonacci/)"
+
+      - id: pytest
+        name: pytest
+        entry: uv run pytest
+        language: system
+        pass_filenames: false
+        files: "^(src/fibonacci/|tests/)"
+
+      - id: rustfmt
+        name: rustfmt
+        description: Check if all files follow the rustfmt style
+        entry: cargo fmt --all -- --color always
+        language: system
+        pass_filenames: false
+        files: "^(src/fibonacci/|tests/)"
+
+      - id: clippy
+        name: clippy
+        description: Check if all files pass clippy
+        entry: cargo clippy --all-targets --all-features -- -D warnings
+        language: system
+        pass_filenames: false
+        files: "^(src/fibonacci/|tests/)"
+
+      - id: rusttest
+        name: rusttest
+        description: Run all tests
+        entry: cargo test --all-targets --all-features
+        language: system
+        pass_filenames: false
+        files: "^(src/fibonacci/|tests/)"
