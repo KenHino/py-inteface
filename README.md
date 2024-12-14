@@ -7,6 +7,10 @@ Tutorial for python interface with static language (Rust, C++) backend
     ```bash
     $ curl -LsSf https://astral.sh/uv/install.sh | sh
     ```
+    ```bash
+    $ uv --version
+    uv 0.5.9
+    ```
 
 1. Start Python project
     ```bash
@@ -14,6 +18,8 @@ Tutorial for python interface with static language (Rust, C++) backend
     ```
     ```bash
     $ cat pyproject.toml
+    ```
+    ```toml
     [project]
     name = "fibonacci"
     version = "0.1.0"
@@ -43,6 +49,8 @@ Tutorial for python interface with static language (Rust, C++) backend
 
     ```bash
     $ cat .pre-commit-config.yaml
+    ```
+    ```yaml
     repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
         rev: v4.5.0
@@ -94,6 +102,8 @@ Tutorial for python interface with static language (Rust, C++) backend
 2. Add modules
     ```bash
     $ cat src/fibonacci/config.py
+    ```
+    ```python
     class Config:
         backend = "py"
     config = Config()
@@ -101,6 +111,8 @@ Tutorial for python interface with static language (Rust, C++) backend
 
     ```bash
     $ cat src/fibonacci/fibonacci.py
+    ```
+    ```python
     from .config import config
 
     def fibonacci(n: int) -> int:
@@ -120,6 +132,8 @@ Tutorial for python interface with static language (Rust, C++) backend
 
     ```bash
     $ cat src/fibonacci/__init__.py
+    ```
+    ```python
     from .fibonacci import fibonacci
 
     __all__ = ["fibonacci"]
@@ -131,6 +145,8 @@ Tutorial for python interface with static language (Rust, C++) backend
     ```
     ```bash
     $ cat tests/test_fibonacci.py
+    ```
+    ```python
     import pytest
     from fibonacci import fibonacci
 
@@ -169,6 +185,8 @@ Tutorial for python interface with static language (Rust, C++) backend
     ```
     ```bash
     $ cat pyproject.toml
+    ```
+    ```toml
     [project]
     name = "fibonacci"
     version = "0.1.0"
@@ -209,6 +227,8 @@ Tutorial for python interface with static language (Rust, C++) backend
     ```
     ```bash
     $ cat .pre-commit-config.yaml
+    ```
+    ```yaml
     repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
         rev: v4.5.0
@@ -281,6 +301,8 @@ Tutorial for python interface with static language (Rust, C++) backend
 2. Add modules
     ```bash
     $ cat src/fibonacci/__init__.py
+    ```
+    ```python
     from .fibonacci import fibonacci
     from .config import config
 
@@ -288,12 +310,16 @@ Tutorial for python interface with static language (Rust, C++) backend
     ```
     ```bash
     $ cat src/fibonacci/_core.pyi
+    ```
+    ```python
     from __future__ import annotations
 
     def fibonacci(n: int) -> int: ...
     ```
     ```bash
     $ cat src/fibonacci/fibonacci.py
+    ```
+    ```python
     from .config import config
     from fibonacci._core import fibonacci as _fibonacci_rs
 
@@ -317,14 +343,18 @@ Tutorial for python interface with static language (Rust, C++) backend
     ```
     ```bash
     $ cat src/fibonacci/config.py
+    ```
+    ```python
     class Config:
-    backend = "py"
+        backend = "py"
 
 
     config = Config()
     ```
     ```bash
     $ cat src/lib.rs
+    ```
+    ```rust
     use pyo3::prelude::*;
 
 
@@ -373,6 +403,8 @@ Tutorial for python interface with static language (Rust, C++) backend
 3. Testing
     ```bash
     $ cat tests/test_fibonacci.py
+    ```
+    ```python
     import pytest
     from fibonacci import fibonacci, config
 
@@ -391,6 +423,8 @@ Tutorial for python interface with static language (Rust, C++) backend
     ```
     ```bash
     $ uv run ipython
+    ```
+    ```ipython
     Python 3.12.2 (main, Feb 25 2024, 04:38:01) [Clang 17.0.6 ]
     Type 'copyright', 'credits' or 'license' for more information
     IPython 8.30.0 -- An enhanced Interactive Python. Type '?' for help.
