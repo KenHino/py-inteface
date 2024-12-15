@@ -441,3 +441,221 @@ Tutorial for python interface with static language (Rust, C++) backend
     In [5]: %timeit fibonacci(30)
     5.62 ms ± 36.2 μs per loop (mean ± std. dev. of 7 runs, 100 loops each)
     ```
+
+
+## Procedures (C++, [pybind11](https://github.com/pybind/pybind11), [scikit-build-core](https://scikit-build-core.readthedocs.io/en/latest/getting_started.html))
+
+The easiest way is obeying
+```bash
+$ uv init . --lib --build-backend scikit
+```
+
+1. Install dependencies
+    ```bash
+    $ sudo apt install build-essential clang
+    ```
+    `clang` may be required for `scikit-build-core` in default settings.
+
+1. Start C++ project
+    ```bash
+    $ cat pyproject.toml
+    ```
+    ```toml
+    [project]
+    name = "fibonacci"
+    version = "0.1.0"
+    description = "Add your description here"
+    readme = "README.md"
+    requires-python = ">=3.12"
+    dependencies = []
+
+    [tool.scikit-build]
+    minimum-version = "build-system.requires"
+    build-dir = "build/{wheel_tag}"
+
+    [build-system]
+    requires = ["scikit-build-core>=0.10", "pybind11"]
+    build-backend = "scikit_build_core.build"  # C++ only (using CMakeLists.txt)
+    ```
+
+    ```bash
+    $ cat CMakeLists.txt
+    ```
+    ```cmake
+    # CMakeLists.txt for scikit-build example project not work with setuptools
+
+    cmake_minimum_required(VERSION 3.15)
+    project(${SKBUILD_PROJECT_NAME} LANGUAGES CXX)
+
+    set(PYBIND11_FINDPYTHON ON)
+    find_package(pybind11 CONFIG REQUIRED)
+
+    pybind11_add_module(_cpp_core MODULE src/lib.cpp)
+    install(TARGETS _cpp_core DESTINATION ${SKBUILD_PROJECT_NAME})
+    ```
+
+1. Implementing something...
+    ```bash
+    $ cat src/lib.cpp
+    ```
+    ```cpp
+    #include <pybind11/pybind11.h>
+
+    // fibonacci sequence
+    uint64_t fibonacci(uint64_t n) {
+    if (n == 1) {
+        return 1;
+    }
+    else if (n == 0) {
+        return 0;
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2);
+    }
+
+    namespace py = pybind11;
+
+    PYBIND11_MODULE(_cpp_core, m) {
+    m.doc() = "pybind11 hello module";
+
+    m.def("fibonacci", &fibonacci, R"pbdoc(
+        A function that returns the n-th number in the fibonacci sequence.
+    )pbdoc");
+    }
+    ```
+
+    ```bash
+    $ cat src/fibonacci/fibonacci.py
+    ```
+    ```python
+    from .config import config
+    try:
+        from fibonacci._core import fibonacci as _fibonacci_rs
+    except ModuleNotFoundError:
+        print("Rust backend not found")
+    try:
+        from fibonacci._cpp_core import fibonacci as _fibonacci_cpp
+    except ModuleNotFoundError:
+        print("C++ backend not found")
+
+
+    def fibonacci(n: int) -> int:
+        if config.backend == "py":
+            return _fibonacci_py(n)
+        elif config.backend == "rs":
+            return _fibonacci_rs(n)
+        elif config.backend == "cpp":
+            return _fibonacci_cpp(n)
+        else:
+            raise NotImplementedError(f"Unknown backend: {config.backend}")
+
+
+    def _fibonacci_py(n: int) -> int:
+        if n <= 0:
+            return 0
+        elif n == 1:
+            return 1
+        else:
+            return _fibonacci_py(n - 1) + _fibonacci_py(n - 2)
+    ```
+
+
+
+## Procedures (C++ + Rust, setuptools)
+
+1. Setup project
+    ```bash
+    $ cat pyproject.toml
+    ```
+    ```toml
+    [project]
+    name = "fibonacci"
+    version = "0.1.0"
+    description = "Add your description here"
+    readme = "README.md"
+    requires-python = ">=3.12"
+    dependencies = []
+
+    [build-system]
+    requires = ["pybind11", "setuptools>=75.0.0", "setuptools-rust", "wheel", "ninja"]
+    build-backend = "setuptools.build_meta"  # Both (using setup.py + setuptools-rust, MANIFEST.in)
+
+    [tool.setuptools.packages]
+    # Pure Python packages/modules
+    find = { where = ["src"] }
+
+    [[tool.setuptools-rust.ext-modules]]
+    # Private Rust extension module to be nested into the Python package
+    target = "fibonacci._core"  # The last part of the name (e.g. "_lib") has to match lib.name in Cargo.toml,
+                                # but you can add a prefix to nest it inside of a Python package.
+    path = "Cargo.toml"      # Default value, can be omitted
+    binding = "PyO3"         # Default value, can be omitted
+    ```
+
+    ```bash
+    $ cat setup.py
+    ```
+    ```python
+    # Available at setup time due to pyproject.toml
+    from pybind11.setup_helpers import Pybind11Extension, build_ext
+    from setuptools import setup
+
+
+    # The main interface is through Pybind11Extension.
+    # * You can add cxx_std=11/14/17, and then build_ext can be removed.
+    # * You can set include_pybind11=false to add the include directory yourself,
+    #   say from a submodule.
+    #
+    # Note:
+    #   Sort input source files if you glob sources to ensure bit-for-bit
+    #   reproducible builds (https://github.com/pybind/python_example/pull/53)
+
+    ext_modules = [
+        Pybind11Extension(
+            "fibonacci._cpp_core",
+            ["src/lib.cpp"],
+            # Example: passing in the version to the compiled code
+        ),
+    ]
+
+    setup(
+        name="fibonacci",
+        ext_modules=ext_modules,
+        # Currently, build_ext only provides an optional "highest supported C++
+        # level" feature, but in the future it may provide more features.
+        cmdclass={"build_ext": build_ext},
+        zip_safe=False,
+    )
+    ```
+
+```bash
+$ uv run ipython
+```
+```ipython
+Python 3.12.2 (main, Feb 25 2024, 04:38:01) [Clang 17.0.6 ]
+Type 'copyright', 'credits' or 'license' for more information
+IPython 8.30.0 -- An enhanced Interactive Python. Type '?' for help.
+
+In [1]: from fibonacci import config, fibonacci
+
+In [2]: config.backend = 'py'
+
+In [3]: %timeit fibonacci(30)
+77 ms ± 761 μs per loop (mean ± std. dev. of 7 runs, 10 loops each)
+
+In [4]: config.backend = 'rs'
+
+In [5]: %timeit fibonacci(30)
+5.86 ms ± 36.4 μs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+
+In [6]: config.backend = 'cpp'
+
+In [7]: %timeit fibonacci(30)
+1.64 ms ± 19.9 μs per loop (mean ± std. dev. of 7 runs, 1,000 loops each)
+```
+
+Why C++ is much faster than Rust?
+
+
+
+## References
+- [setuptools-rust](https://github.com/PyO3/setuptools-rust)
