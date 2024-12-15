@@ -627,6 +627,15 @@ $ uv init . --lib --build-backend scikit
     )
     ```
 
+    ```bash
+    $ cat MANIFEST.in
+    ```
+    ```plaintext
+    include Cargo.toml
+    recursive-include src *.rs
+    ```
+
+
 ```bash
 $ uv run ipython
 ```

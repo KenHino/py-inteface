@@ -10,3 +10,5 @@ def test_fibonacci(n, answer):
     assert fibonacci(n) == answer
     config.backend = 'rs'
     assert fibonacci(n) == answer
+    config.backend = 'cpp'
+    assert fibonacci(n) == answer

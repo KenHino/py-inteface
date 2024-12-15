@@ -36,6 +36,7 @@ binding = "PyO3"         # Default value, can be omitted
 
 [dependency-groups]
 dev = [
+    "clang-format>=19.1.5",
     "ipython>=8.30.0",
     "mypy>=1.13.0",
     "pre-commit>=4.0.1",
