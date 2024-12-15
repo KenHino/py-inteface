@@ -2,14 +2,14 @@
 
 // fibonacci sequence
 uint64_t fibonacci(uint64_t n) {
-  match(n) {
+  switch (n) {
     case 0:
       return 0;
     case 1:
       return 1;
     case 2:
       return 1;
-    case _:
+    default:
       return fibonacci(n - 1) + fibonacci(n - 2);
   }
 }
