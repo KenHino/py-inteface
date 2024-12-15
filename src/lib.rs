@@ -2,13 +2,12 @@ use pyo3::prelude::*;
 
 #[pyfunction]
 fn fibonacci(n: u64) -> u64 {
-    if n == 0 {
-        return 0;
-    } else if n == 1 {
-        return 1;
+    match n {
+        0 => 0,
+        1 => 1,
+        2 => 1,
+        _ => fibonacci(n - 1) + fibonacci(n - 2),
     }
-
-    fibonacci(n - 1) + fibonacci(n - 2)
 }
 // test
 #[cfg(test)]

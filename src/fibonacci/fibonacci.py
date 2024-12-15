@@ -14,14 +14,16 @@ except ModuleNotFoundError:
 
 
 def fibonacci(n: int) -> int:
-    if config.backend == "py":
-        return _fibonacci_py(n)
-    elif config.backend == "rs":
-        return _fibonacci_rs(n)
-    elif config.backend == "cpp":
-        return _fibonacci_cpp(n)
-    else:
-        raise NotImplementedError(f"Unknown backend: {config.backend}")
+    match config.backend:
+        case "py":
+            return _fibonacci_py(n)
+        case "rs":
+            return _fibonacci_rs(n)
+        case "cpp":
+            return _fibonacci_cpp(n)
+        case _:
+            raise NotImplementedError(f"Unknown backend: {config.backend}")
+
 
 
 def _fibonacci_py(n: int) -> int:
