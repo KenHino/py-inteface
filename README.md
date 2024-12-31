@@ -223,7 +223,7 @@ Tutorial for python interface with static language (Rust, C++) backend
     └── lib.rs
     ```
     ```bash
-    $ uv run maturing develop --uv
+    $ uv run maturin develop --uv
     ```
     ```bash
     $ cat .pre-commit-config.yaml
